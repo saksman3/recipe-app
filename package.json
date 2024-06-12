@@ -1,0 +1,15 @@
+{
+  "name": "recipe-app",
+  "version": "1.0.0",
+  "description": "A simple recipe sharing site",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "body-parser": "^1.19.0"
+  },
+  "author": "Your Name",
+  "license": "ISC"
+}
