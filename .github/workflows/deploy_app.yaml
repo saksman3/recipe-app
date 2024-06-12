@@ -8,7 +8,7 @@ on:
 env:
   AWS_REGION: us-east-1  # Update with your AWS region
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}  # Replace with your AWS account ID
-  ECR_REPOSITORY: medium-app-repo  # Replace with your ECR repository name
+  ECR_REPOSITORY: mediuma-app-repo  # Replace with your ECR repository name
 
 jobs:
   build-and-push:
