@@ -61,6 +61,4 @@ jobs:
           script: |
             docker login --username AWS --password ${{ secrets.AWS_ACCESS_KEY_ID }} ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
             docker pull "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$ECR_REPO_NAME:latest"
-            docker stop medium-app || true
-            docker rm medium-app || true
             docker run -d --name medium-app -p 80:3000 "${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$ECR_REPO_NAME:latest"
