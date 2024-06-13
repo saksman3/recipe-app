@@ -11,6 +11,10 @@ let recipes = [
   { id: 2, name: 'Pancakes', ingredients: ['flour', 'milk', 'eggs', 'sugar'], instructions: 'Mix ingredients, cook on griddle.' }
 ];
 
+// Health check endpoint
+app.get('/', (req, res) => {
+    res.status(200).send('Healthy');
+  });
 // Get all recipes
 app.get('/recipes', (req, res) => {
   res.json(recipes);
