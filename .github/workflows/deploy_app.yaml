@@ -49,6 +49,8 @@ jobs:
         id: ec2-ips
         run: |
           INSTANCE_IPS=$(aws ec2 describe-instances --instance-ids ${{ steps.ec2-instances.outputs.instance_ids }} --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
+          # Format IPs as comma-separated string
+          INSTANCE_IPS=$(echo $INSTANCE_IPS | tr '\n' ',' | sed 's/,$//')
           echo "Found instance IPs: $INSTANCE_IPS"
           echo "::set-output name=instance_ips::$INSTANCE_IPS"
 
@@ -59,8 +61,9 @@ jobs:
           username: ${{ secrets.EC2_INSTANCE_USER }}
           key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
           script: |
+            sh-keyscan -H ${{ steps.ec2-ips.outputs.instance_ips }} >> ~/.ssh/known_hosts
             aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
             docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
-            docker stop medium-app
-            docker rm medium-app
+            docker stop medium-app || true
+            docker rm medium-app || true
             docker run -d --name medium-app -p 80:3000 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
