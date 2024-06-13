@@ -53,7 +53,7 @@ jobs:
       - name: Retrieve EC2 instance IPs by Tag
         id: ec2-instances
         run: |
-          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=my-instance-name" --query "Reservations[*].Instances[*].InstanceId" --output text)
+          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=dev-nginx-app-alb-waf-instance" --query "Reservations[*].Instances[*].InstanceId" --output text)
           echo "Found instances: $INSTANCE_IDS"
           echo "::set-output name=instance_ids::$INSTANCE_IDS"
 
