@@ -43,7 +43,7 @@ jobs:
         run: |
           INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=dev-nginx-app-alb-waf-instance" --query "Reservations[*].Instances[*].InstanceId" --output json)
           instance_ids=$(echo "$INSTANCE_IDS" | jq -r '.[][]')
-          instance_ids=$(echo "$instance_ids" | paste -sd "," -)
+          instance_ids=$(echo "$instance_ids" | paste -sd " " -)
           echo "Found instances: $instance_ids"
           echo "::set-output name=instance_ids::$instance_ids"
 
