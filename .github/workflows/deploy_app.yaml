@@ -41,17 +41,19 @@ jobs:
       - name: Retrieve EC2 instance IPs by Tag
         id: ec2-instances
         run: |
-          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=dev-nginx-app-alb-waf-instance" --query "Reservations[*].Instances[*].InstanceId" --output text)
-          echo "Found instances: $INSTANCE_IDS"
-          echo "::set-output name=instance_ids::$INSTANCE_IDS"
+          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag:Name,Values=dev-nginx-app-alb-waf-instance" --query "Reservations[*].Instances[*].InstanceId" --output json)
+          instance_ids=$(echo "$INSTANCE_IDS" | jq -r '.[][]')
+          instance_ids=$(echo "$instance_ids" | paste -sd "," -)
+          echo "Found instances: $instance_ids"
+          echo "::set-output name=instance_ids::$instance_ids"
 
       - name: Retrieve EC2 instance IPs
         id: ec2-ips
         run: |
-          INSTANCE_IPS=$(aws ec2 describe-instances --instance-ids ${{ steps.ec2-instances.outputs.instance_ids }} --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
+          INSTANCE_IPS=$(aws ec2 describe-instances --instance-ids ${{ steps.ec2-instances.outputs.instance_ids }} --query "Reservations[*].Instances[*].PublicIpAddress" --output json)
           # Format IPs as comma-separated string
-          echo "INSTANCE_IPS----------[$INSTANCE_IPS]--------------------------"
-          INSTANCE_IPS=$(echo $INSTANCE_IPS | tr '\n' ',' | sed 's/,$//')
+          instance_ids=$(echo "$INSTANCE_IPS" | jq -r '.[][]')
+          INSTANCE_IPS=$(echo "$instance_ids" | paste -sd "," -)
           echo "Found instance IPs: $INSTANCE_IPS"
           echo "::set-output name=instance_ips::$INSTANCE_IPS"
 
