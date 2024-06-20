@@ -77,7 +77,7 @@ jobs:
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.BAST_SSH_PRIVATE_KEY }}
-        run: |
+        script: |
           ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -A -tt -L 50000:${{ env.EC2_BASTION_HOST }}:22 ${{ secrets.EC2_BASTION_USER }}@${{ env.EC2_BASTION_HOST }} \
             "echo 'SSH tunnel established' && sleep 5 && ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -A -tt -L 3000:${{ steps.ec2-ips.outputs.instance_ips }}:22 ${{ secrets.EC2_BASTION_USER }}@localhost \
               \"sh-keyscan -H ${{ steps.ec2-ips.outputs.instance_ips }} >> ~/.ssh/known_hosts && \
