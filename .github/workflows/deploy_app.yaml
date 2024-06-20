@@ -9,6 +9,7 @@ env:
   AWS_REGION: us-east-1  # Update with your AWS region
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}  # Replace with your AWS account ID
   ECR_REPOSITORY: medium-app-repo  # Replace with your ECR repository name
+  EC2_BASTION_HOST: ${{ secrets.EC2_BASTION_HOST }}
 
 jobs:
   build-and-push:
@@ -57,16 +58,31 @@ jobs:
           echo "Found instance IPs: $INSTANCE_IPS"
           echo "::set-output name=instance_ips::$INSTANCE_IPS"
 
-      - name: Deploy to EC2 instances
-        uses: appleboy/ssh-action@master
+      # - name: Deploy to EC2 instances
+      #   uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ steps.ec2-ips.outputs.instance_ips }}
+      #     username: ${{ secrets.EC2_INSTANCE_USER }}
+      #     key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+      #     script: |
+      #       sh-keyscan -H ${{ steps.ec2-ips.outputs.instance_ips }} >> ~/.ssh/known_hosts
+      #       aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+      #       docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+      #       docker stop medium-app || true
+      #       docker rm medium-app || true
+      #       docker run -d --name medium-app -p 80:3000 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+
+
+      - name: Deploy to EC2 instances via bastion
+        uses: webfactory/ssh-agent@v0.5.3
         with:
-          host: ${{ steps.ec2-ips.outputs.instance_ips }}
-          username: ${{ secrets.EC2_INSTANCE_USER }}
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          script: |
-            sh-keyscan -H ${{ steps.ec2-ips.outputs.instance_ips }} >> ~/.ssh/known_hosts
-            aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
-            docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
-            docker stop medium-app || true
-            docker rm medium-app || true
-            docker run -d --name medium-app -p 80:3000 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+          ssh-private-key: ${{ secrets.BAST_SSH_PRIVATE_KEY }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -A -tt -L 50000:${{ env.EC2_BASTION_HOST }}:22 ${{ secrets.EC2_BASTION_USER }}@${{ env.EC2_BASTION_HOST }} \
+            "echo 'SSH tunnel established' && sleep 5 && ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -A -tt -L 3000:${{ steps.ec2-ips.outputs.instance_ips }}:22 ${{ secrets.EC2_BASTION_USER }}@localhost \
+              \"sh-keyscan -H ${{ steps.ec2-ips.outputs.instance_ips }} >> ~/.ssh/known_hosts && \
+              aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com && \
+              docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest && \
+              docker stop medium-app || true && \
+              docker rm medium-app || true && \
+              docker run -d --name medium-app -p 80:3000 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest\""
