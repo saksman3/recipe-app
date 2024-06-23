@@ -49,6 +49,8 @@ jobs:
 
       - name: Retrieve EC2 instance IPs and Deploy Containers
         id: ec2-ips
+        env: 
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           INSTANCE_IPS=$(aws ec2 describe-instances --instance-ids ${{ steps.ec2-instances.outputs.instance_ids }} --query "Reservations[*].Instances[*].PublicIpAddress" --output json)
           # Format IPs as comma-separated string
