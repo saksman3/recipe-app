@@ -9,7 +9,6 @@ env:
   AWS_REGION: us-east-1  # Update with your AWS region
   ECR_REPOSITORY: medium-app-repo  # Replace with your ECR repository name
   EC2_BASTION_HOST: ${{ secrets.EC2_BASTION_HOST }}
-  IMAGE_TAG: $(git rev-parse --short HEAD)
 
 jobs:
   build-and-push:
@@ -17,6 +16,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
+      - name: Extract Git commit hash
+        id: vars
+        run: echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
