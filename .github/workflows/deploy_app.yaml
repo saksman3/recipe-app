@@ -50,6 +50,7 @@ jobs:
           echo "Found instances: $instance_ids"
           echo "::set-output name=instance_ids::$instance_ids"
 
+
       - name: Retrieve EC2 instance IPs and Deploy Containers
         id: ec2-ips
         env: 
