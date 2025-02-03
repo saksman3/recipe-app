@@ -6,6 +6,18 @@ const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
+
+// adding requirement for api-key on the request
+const API_KEY = process.env.API_KEY || "secret-key";
+
+app.use((req, res, next) => {
+  const apiKey = req.header("x-api-key");
+  if (!apiKey || apiKey !== API_KEY) {
+    return res.status(401).json({ error: "Unauthorized: Invalid API key" });
+  }
+  next();
+});
+
 let recipes = [
   { id: 1, name: 'Pasta', ingredients: ['pasta', 'tomato sauce', 'cheese'], instructions: 'Boil pasta, add sauce, sprinkle cheese.' },
   { id: 2, name: 'Pancakes', ingredients: ['flour', 'milk', 'eggs', 'sugar'], instructions: 'Mix ingredients, cook on griddle.' }
